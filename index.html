@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PVAF - Visites préventives résidentielles | MRC de La Matanie</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+<style>
+:root{
+  --bleu:#003E6B;
+  --bleu2:#005A93;
+  --bleu3:#0074B8;
+  --gris:#F4F6F8;
+  --texte:#1f2937;
+  --muted:#64748b;
+  --vert:#5A9E3A;
+  --jaune:#D7A937;
+  --orange:#ee7c22;
+  --rouge:#C0392B;
+  --grisFonce:#6b7280;
+  --white:#ffffff;
+}
+
+*{box-sizing:border-box;}
+body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--gris);color:var(--texte);}
+
+.header{background:linear-gradient(135deg,var(--bleu),var(--bleu2));color:#fff;text-align:center;padding:38px 20px 28px;box-shadow:0 4px 20px rgba(0,0,0,.18);}
+.logo{max-height:130px;max-width:90%;filter:drop-shadow(0 4px 10px rgba(0,0,0,.25));}
+.header h1{margin:14px 0 6px;font-size:38px;letter-spacing:.3px;}
+.header p{margin:0;font-size:18px;opacity:.92;}
+#maj{margin-top:12px;display:inline-block;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.14);font-size:13px;}
+
+.navbar{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:16px 20px;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.06);position:sticky;top:0;z-index:900;}
+.nav-btn{border:none;border-radius:999px;padding:12px 18px;font-weight:700;cursor:pointer;background:#e8eef4;color:var(--bleu);transition:.2s;}
+.nav-btn:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.12);}
+.nav-btn.active{background:linear-gradient(135deg,var(--bleu),var(--bleu2));color:#fff;}
+
+.view{display:none;}
+.view.active{display:block;}
+
+.stats{display:flex;gap:15px;padding:20px;flex-wrap:wrap;}
+.card{background:#fff;border-radius:16px;padding:20px;flex:1;min-width:180px;box-shadow:0 4px 12px rgba(0,0,0,.08);transition:all .25s ease;}
+.card:hover{transform:translateY(-5px);box-shadow:0 10px 25px rgba(0,0,0,.15);}
+.card h2{margin:0;font-size:34px;color:var(--bleu);}
+.card p{margin:8px 0 0;color:#5b6472;}
+.card.green h2{color:var(--vert);}
+.card.red h2{color:var(--rouge);}
+.card.orange h2{color:var(--orange);}
+.card.blue h2{color:var(--bleu2);}
+
+.layout{display:flex;gap:20px;padding:20px;padding-top:0;}
+.sidebar{width:380px;background:#fff;border-radius:16px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,.08);max-height:75vh;overflow:auto;}
+.sidebar h3{margin:8px 0 12px;color:var(--bleu);}
+#map{flex:1;height:75vh;min-height:520px;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.08);}
+
+.filter-box{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;padding:12px;background:#f8fafc;border-radius:12px;}
+.filter-box input,.filter-box select{width:100%;border:1px solid #d1d5db;border-radius:10px;padding:10px;font-size:14px;background:#fff;}
+.filter-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.small-btn{border:none;border-radius:10px;padding:10px 12px;background:var(--bleu);color:white;font-weight:700;cursor:pointer;transition:.2s;}
+.small-btn:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,.18);}
+.secondary-btn{background:#e8eef4;color:var(--bleu);}
+
+.visite-item{padding:15px;margin-bottom:12px;border-radius:14px;background:#fff;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.08);transition:.2s;border-left:6px solid var(--bleu2);}
+.visite-item:hover{transform:translateX(5px);box-shadow:0 8px 18px rgba(0,0,0,.12);}
+.visite-numero{font-size:17px;font-weight:800;color:var(--bleu);margin-bottom:8px;}
+.visite-adresse{line-height:1.4;font-size:14px;}
+.visite-meta{margin-top:8px;color:#666;font-size:12px;line-height:1.45;}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;color:white;font-size:12px;font-weight:700;margin-top:8px;}
+
+.pvaf-icon{width:24px;height:24px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);}
+.leaflet-popup-content{margin:12px;}
+.popup-card{min-width:285px;font-family:Segoe UI,Arial,sans-serif;}
+.popup-header{color:white;padding:12px;border-radius:10px;font-weight:800;margin-bottom:10px;line-height:1.4;}
+.popup-section{font-weight:800;color:var(--bleu);margin-top:10px;}
+.popup-problem{background:#fff1f2;border-left:5px solid var(--rouge);border-radius:10px;padding:8px;margin-top:8px;font-size:13px;}
+.leaflet-control-layers{border-radius:12px !important;box-shadow:0 4px 12px rgba(0,0,0,.15) !important;}
+
+/* Page statistiques */
+.stats-page{padding:20px;}
+.stats-header{background:#fff;border-radius:18px;padding:22px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,.08);display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap;}
+.stats-header h2{margin:0;color:var(--bleu);font-size:30px;}
+.stats-header p{margin:6px 0 0;color:var(--muted);}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:15px;margin-bottom:20px;}
+.kpi{background:#fff;border-radius:16px;padding:18px;box-shadow:0 4px 12px rgba(0,0,0,.08);}
+.kpi .label{color:var(--muted);font-size:13px;margin-bottom:8px;}
+.kpi .value{font-size:28px;font-weight:800;color:var(--bleu);}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+.panel{background:#fff;border-radius:18px;padding:18px;box-shadow:0 4px 12px rgba(0,0,0,.08);}
+.panel h3{margin:0 0 14px;color:var(--bleu);}
+.chart-box{height:340px;position:relative;}
+.rank-list{display:flex;flex-direction:column;gap:10px;}
+.rank-item{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#f8fafc;border-radius:12px;padding:12px;border-left:6px solid var(--bleu2);}
+.rank-left{font-weight:700;color:#1f2937;}
+.rank-right{font-weight:800;color:var(--bleu);}
+.rank-bar{height:8px;background:#dbeafe;border-radius:99px;margin-top:8px;overflow:hidden;}
+.rank-bar div{height:8px;background:linear-gradient(90deg,var(--bleu2),var(--bleu3));border-radius:99px;}
+#heatmap{height:520px;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.08);}
+.note{color:var(--muted);font-size:13px;line-height:1.45;}
+.empty-state{padding:18px;background:#f8fafc;border-radius:12px;color:var(--muted);}
+.question-list{display:flex;flex-direction:column;gap:8px;max-height:500px;overflow:auto;}
+.question-item{background:#f8fafc;border-radius:10px;padding:10px;font-size:13px;border-left:5px solid #cbd5e1;}
+.question-item.problem{border-left-color:var(--rouge);background:#fff1f2;}
+.question-item .q{font-weight:800;color:#334155;margin-bottom:4px;}
+.question-item .r{color:#475569;}
+
+@media(max-width:1000px){.kpi-grid{grid-template-columns:1fr 1fr;}.grid-2{grid-template-columns:1fr;}}
+@media(max-width:768px){
+  body{overflow-x:hidden;}
+  .header{padding:25px 15px;}
+  .header h1{font-size:28px;line-height:1.2;}
+  .logo{max-height:95px;}
+  .navbar{position:static;}
+  .stats{flex-direction:column;padding:15px;gap:12px;}
+  .layout{display:flex;flex-direction:column;padding:15px;gap:15px;}
+  #map{order:1;width:100%;height:65vh;min-height:420px;border-radius:14px;flex:none;}
+  .sidebar{order:2;width:100%;max-height:none;box-sizing:border-box;}
+  .card{width:100%;}
+  .filter-row{grid-template-columns:1fr;}
+  .stats-page{padding:15px;}
+  .kpi-grid{grid-template-columns:1fr;}
+  .chart-box{height:300px;}
+  #heatmap{height:420px;}
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <img src="Logo-SPI-Transparent.png" class="logo" alt="Prévention incendie">
+  <h1>Visites préventives résidentielles</h1>
+  <p>MRC de La Matanie - Programme de vérification des avertisseurs</p>
+  <div id="maj">Dernière synchronisation : --</div>
+</div>
+
+<nav class="navbar">
+  <button id="btnCarte" class="nav-btn active" onclick="afficherVue('carte')">🗺️ Carte</button>
+  <button id="btnStats" class="nav-btn" onclick="afficherVue('stats')">📊 Statistiques</button>
+</nav>
+
+<section id="vueCarte" class="view active">
+  <div class="stats">
+    <div class="card blue"><h2 id="totalVisites">0</h2><p>Visites totales</p></div>
+    <div class="card green"><h2 id="visitesConformes">0</h2><p>Conformes</p></div>
+    <div class="card red"><h2 id="visitesNonConformes">0</h2><p>Non conformes</p></div>
+    <div class="card orange"><h2 id="visitesPrioritaires">0</h2><p>Prioritaires</p></div>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar">
+      <h3>Filtres</h3>
+      <div class="filter-box">
+        <input id="searchInput" placeholder="🔎 Rechercher adresse, propriétaire, numéro..." oninput="appliquerFiltres()">
+        <div class="filter-row">
+          <select id="filtreStatut" onchange="appliquerFiltres()"><option value="">Tous les statuts</option></select>
+          <select id="filtreCircuit" onchange="appliquerFiltres()"><option value="">Tous les circuits</option></select>
+        </div>
+        <div class="filter-row">
+          <select id="filtreResponsable" onchange="appliquerFiltres()"><option value="">Tous les responsables</option></select>
+          <select id="filtreMunicipalite" onchange="appliquerFiltres()"><option value="">Toutes les municipalités</option></select>
+        </div>
+        <button class="small-btn secondary-btn" onclick="resetFiltres()">Réinitialiser les filtres</button>
+      </div>
+
+      <h3>Visites</h3>
+      <div id="listeVisites"></div>
+    </div>
+    <div id="map"></div>
+  </div>
+</section>
+
+<section id="vueStats" class="view">
+  <div class="stats-page">
+    <div class="stats-header">
+      <div>
+        <h2>Statistiques PVAF</h2>
+        <p>Conformité, secteurs problématiques, circuits, responsables, périodes fortes et carte thermique.</p>
+      </div>
+      <div class="stats-actions">
+        <button class="small-btn" onclick="chargerVisites(true)">🔄 Actualiser</button>
+        <button class="small-btn secondary-btn" onclick="afficherVue('carte')">🗺️ Retour à la carte</button>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi"><div class="label">Total des visites</div><div class="value" id="kpiTotal">0</div></div>
+      <div class="kpi"><div class="label">Taux de conformité</div><div class="value" id="kpiTaux">0%</div></div>
+      <div class="kpi"><div class="label">Top municipalité</div><div class="value" id="kpiTopMunicipalite">--</div></div>
+      <div class="kpi"><div class="label">Problèmes fumée</div><div class="value" id="kpiFumee">0</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel"><h3>Histogramme par municipalité</h3><div class="chart-box"><canvas id="chartMunicipalites"></canvas></div></div>
+      <div class="panel"><h3>Visites par mois</h3><div class="chart-box"><canvas id="chartMois"></canvas></div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel"><h3>Classement Top 10 - Plus de visites</h3><div id="topMunicipalites" class="rank-list"></div></div>
+      <div class="panel"><h3>Secteurs les moins visités</h3><div id="bottomMunicipalites" class="rank-list"></div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel"><h3>Conformité</h3><div class="chart-box"><canvas id="chartConformite"></canvas></div></div>
+      <div class="panel"><h3>Problèmes par catégorie</h3><div class="chart-box"><canvas id="chartCategories"></canvas></div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel"><h3>Top problèmes détectés</h3><div id="topProblemes" class="rank-list"></div></div>
+      <div class="panel"><h3>Analyse opérationnelle</h3><div id="analyseTexte" class="note"></div></div>
+    </div>
+
+    <div class="panel">
+      <h3>Carte thermique des visites et non-conformités</h3>
+      <p class="note">La carte thermique indique les secteurs où les visites et dossiers problématiques sont les plus concentrés.</p>
+      <div id="heatmap"></div>
+    </div>
+  </div>
+</section>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const API_URL='https://pvaf.oussama-refas.workers.dev/';
+let visitesCache=[];
+let visitesFiltrees=[];
+let charts=[];
+let heatMapInstance=null;
+let heatLayer=null;
+
+const moisNoms=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'});
+const topo=L.tileLayer('https://tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'© OpenTopoMap'});
+const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri'});
+const map=L.map('map',{layers:[osm]}).setView([48.85,-67.53],9);
+L.control.layers({'🗺️ Standard':osm,'⛰️ Topographique':topo,'🛰️ Satellite':satellite},null,{collapsed:false}).addTo(map);
+setTimeout(()=>map.invalidateSize(),500);
+window.addEventListener('resize',()=>setTimeout(()=>{map.invalidateSize();if(heatMapInstance)heatMapInstance.invalidateSize();},300));
+
+const visiteLayer=L.markerClusterGroup({showCoverageOnHover:false,spiderfyOnMaxZoom:true,maxClusterRadius:45});
+map.addLayer(visiteLayer);
+
+function afficherVue(vue){
+  document.getElementById('vueCarte').classList.toggle('active',vue==='carte');
+  document.getElementById('vueStats').classList.toggle('active',vue==='stats');
+  document.getElementById('btnCarte').classList.toggle('active',vue==='carte');
+  document.getElementById('btnStats').classList.toggle('active',vue==='stats');
+  if(vue==='carte')setTimeout(()=>map.invalidateSize(),250);
+  if(vue==='stats')setTimeout(()=>{genererStatistiques();if(heatMapInstance)heatMapInstance.invalidateSize();},250);
+}
+
+function couleurVisite(v){
+  const s=v?.analyse?.statutConformite || 'À vérifier';
+  const p=v?.analyse?.niveauPriorite || '';
+  if(p==='Élevé')return '#ee7c22';
+  if(s==='Conforme')return '#5A9E3A';
+  if(s==='Non conforme')return '#C0392B';
+  return '#005A93';
+}
+function creerIcone(couleur,taille=24){return L.divIcon({className:'',html:`<div class="pvaf-icon" style="background:${couleur};width:${taille}px;height:${taille}px;"></div>`,iconSize:[taille,taille],iconAnchor:[taille/2,taille/2]});}
+function getId(v){return v.numeroPrevention||v.id||v.recordID||'--';}
+function getAdresse(v){return v.adresse||'Adresse non précisée';}
+function getMunicipalite(v){return v.municipalite||'Non précisée';}
+function getResponsable(v){return v.responsable||'Non précisé';}
+function getCircuit(v){return v.circuit||'Non précisé';}
+function getStatut(v){return v?.analyse?.statutConformite||'À vérifier';}
+function dateRef(v){return v.dateVisite||v.dateReception||'';}
+function dateMois(v){const d=new Date(dateRef(v));return isNaN(d)?'Non précisé':moisNoms[d.getMonth()];}
+function topProblemes(v,limite=4){return (v?.analyse?.problemes||[]).slice(0,limite);}
+
+async function chargerVisites(recalculStats=false){
+  try{
+    const r=await fetch(API_URL+'?t='+Date.now());
+    const data=await r.json();
+    visitesCache=Array.isArray(data)?data:[];
+    visitesFiltrees=[...visitesCache];
+    remplirFiltres();
+    appliquerFiltres(false);
+    if(recalculStats||document.getElementById('vueStats').classList.contains('active'))genererStatistiques();
+    document.getElementById('maj').innerText='Dernière synchronisation : '+new Date().toLocaleTimeString('fr-CA');
+  }catch(e){console.error('Erreur chargement PVAF',e);}
+}
+
+function remplirFiltres(){
+  const sets={
+    filtreStatut:new Set(),filtreCircuit:new Set(),filtreResponsable:new Set(),filtreMunicipalite:new Set()
+  };
+  visitesCache.forEach(v=>{sets.filtreStatut.add(getStatut(v));sets.filtreCircuit.add(getCircuit(v));sets.filtreResponsable.add(getResponsable(v));sets.filtreMunicipalite.add(getMunicipalite(v));});
+  Object.entries(sets).forEach(([id,set])=>{
+    const sel=document.getElementById(id);const current=sel.value;const first=sel.options[0].text;
+    sel.innerHTML=`<option value="">${first}</option>`;
+    [...set].filter(Boolean).sort().forEach(x=>{const o=document.createElement('option');o.value=x;o.textContent=x;sel.appendChild(o);});
+    sel.value=current;
+  });
+}
+function resetFiltres(){['searchInput','filtreStatut','filtreCircuit','filtreResponsable','filtreMunicipalite'].forEach(id=>document.getElementById(id).value='');appliquerFiltres();}
+function appliquerFiltres(updateStats=true){
+  const q=document.getElementById('searchInput').value.toLowerCase().trim();
+  const st=document.getElementById('filtreStatut').value;
+  const ci=document.getElementById('filtreCircuit').value;
+  const re=document.getElementById('filtreResponsable').value;
+  const mu=document.getElementById('filtreMunicipalite').value;
+  visitesFiltrees=visitesCache.filter(v=>{
+    const texte=[getId(v),getAdresse(v),v.proprietaire,v.contact,getMunicipalite(v),getCircuit(v),getResponsable(v),getStatut(v)].join(' ').toLowerCase();
+    return (!q||texte.includes(q))&&(!st||getStatut(v)===st)&&(!ci||getCircuit(v)===ci)&&(!re||getResponsable(v)===re)&&(!mu||getMunicipalite(v)===mu);
+  });
+  afficherVisitesSurCarte();
+  if(updateStats&&document.getElementById('vueStats').classList.contains('active'))genererStatistiques();
+}
+function afficherVisitesSurCarte(){
+  visiteLayer.clearLayers();document.getElementById('listeVisites').innerHTML='';
+  const bounds=[];let conformes=0,non=0,prioritaires=0;
+  visitesFiltrees.forEach(v=>{
+    if(getStatut(v)==='Conforme')conformes++;
+    if(getStatut(v)==='Non conforme')non++;
+    if(['Prioritaire','Élevé'].includes(v?.analyse?.niveauPriorite))prioritaires++;
+    if(!v.latitude||!v.longitude)return;
+    const lat=parseFloat(v.latitude),lon=parseFloat(v.longitude);if(isNaN(lat)||isNaN(lon))return;
+    bounds.push([lat,lon]);const c=couleurVisite(v);
+    const marker=L.marker([lat,lon],{icon:creerIcone(c,24)}).addTo(visiteLayer);
+    const problemes=topProblemes(v).map(p=>`<div class="popup-problem"><b>${p.categorie}</b><br>${p.question}<br><i>Réponse : ${p.reponse}</i></div>`).join('') || '<div class="note">Aucun problème majeur détecté.</div>';
+    marker.bindPopup(`<div class="popup-card"><div class="popup-header" style="background:${c};">🏠 Visite #${getId(v)}<br>${getStatut(v)}</div><div class="popup-section">📍 Adresse</div>${getAdresse(v)}<div class="popup-section">🏘️ Municipalité</div>${getMunicipalite(v)}<div class="popup-section">🧭 Circuit</div>${getCircuit(v)}<div class="popup-section">👤 Responsable</div>${getResponsable(v)}<div class="popup-section">📅 Date</div>${dateRef(v)||'Non précisée'}<div class="popup-section">⚠️ Problèmes principaux</div>${problemes}</div>`);
+    marker.on('mouseover',()=>marker.setIcon(creerIcone(c,32)));marker.on('mouseout',()=>marker.setIcon(creerIcone(c,24)));
+    const item=document.createElement('div');item.className='visite-item';item.style.borderLeft='6px solid '+c;
+    item.innerHTML=`<div class="visite-numero">🏠 Visite #${getId(v)}</div><div class="visite-adresse">📍 ${getAdresse(v)}</div><div class="visite-meta">${getMunicipalite(v)}<br>Responsable : ${getResponsable(v)}<br>Date : ${dateRef(v)||'Non précisée'}</div><span class="badge" style="background:${c};">${getStatut(v)}</span>`;
+    item.onclick=()=>{map.flyTo([lat,lon],16,{duration:1.2});setTimeout(()=>marker.openPopup(),500);};document.getElementById('listeVisites').appendChild(item);
+  });
+  document.getElementById('totalVisites').innerText=visitesFiltrees.length;
+  document.getElementById('visitesConformes').innerText=conformes;
+  document.getElementById('visitesNonConformes').innerText=non;
+  document.getElementById('visitesPrioritaires').innerText=prioritaires;
+  if(bounds.length)map.fitBounds(bounds,{padding:[30,30]});setTimeout(()=>map.invalidateSize(),300);
+}
+function countBy(arr,fn){const o={};arr.forEach(x=>{const k=fn(x)||'Non précisé';o[k]=(o[k]||0)+1;});return o;}
+function destroyCharts(){charts.forEach(c=>c.destroy());charts=[];}
+function rankHtml(id,entries,max){const el=document.getElementById(id);el.innerHTML='';if(!entries.length){el.innerHTML='<div class="empty-state">Aucune donnée disponible.</div>';return;}entries.forEach(([nom,val],i)=>{const pct=max?Math.round((val/max)*100):0;const div=document.createElement('div');div.className='rank-item';div.innerHTML=`<div style="flex:1"><div class="rank-left">${i+1}. ${nom}</div><div class="rank-bar"><div style="width:${pct}%"></div></div></div><div class="rank-right">${val}</div>`;el.appendChild(div);});}
+function genererStatistiques(){
+  destroyCharts();const data=visitesFiltrees;const total=data.length;const conformes=data.filter(v=>getStatut(v)==='Conforme').length;const non=data.filter(v=>getStatut(v)==='Non conforme').length;const taux=total?Math.round((conformes/total)*100):0;
+  const municip=Object.entries(countBy(data,getMunicipalite)).sort((a,b)=>b[1]-a[1]);const topTen=municip.slice(0,10);const bottom=[...municip].sort((a,b)=>a[1]-b[1]).slice(0,10);
+  const moisObj=countBy(data,dateMois);const mois=moisNoms.map(m=>moisObj[m]||0);const cat={Fumée:0,CO:0,Électricité:0,Évacuation:0,'Numéro civique':0,Contact:0,Chauffage:0};
+  const problemQ={}; data.forEach(v=>{const a=v.analyse||{};cat.Fumée+=a.problemesFumee||0;cat.CO+=a.problemesCO||0;cat.Électricité+=a.problemesElectriques||0;cat.Évacuation+=a.problemesEvacuation||0;cat['Numéro civique']+=a.problemesNumeroCivique||0;cat.Contact+=a.problemesContact||0;cat.Chauffage+=a.problemesChauffage||0;(a.problemes||[]).forEach(p=>{problemQ[p.question]=(problemQ[p.question]||0)+1;});});
+  document.getElementById('kpiTotal').innerText=total;document.getElementById('kpiTaux').innerText=taux+'%';document.getElementById('kpiTopMunicipalite').innerText=municip.length?municip[0][0]:'--';document.getElementById('kpiFumee').innerText=cat.Fumée;
+  rankHtml('topMunicipalites',topTen,municip.length?municip[0][1]:0);rankHtml('bottomMunicipalites',bottom,municip.length?municip[0][1]:0);rankHtml('topProblemes',Object.entries(problemQ).sort((a,b)=>b[1]-a[1]).slice(0,10),Math.max(...Object.values(problemQ),0));
+  charts.push(new Chart(document.getElementById('chartMunicipalites'),{type:'bar',data:{labels:topTen.map(e=>e[0]),datasets:[{data:topTen.map(e=>e[1]),backgroundColor:'#005A93'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}}));
+  charts.push(new Chart(document.getElementById('chartMois'),{type:'bar',data:{labels:moisNoms,datasets:[{label:'Visites',data:mois,backgroundColor:'#5A9E3A'}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true}}}}));
+  charts.push(new Chart(document.getElementById('chartConformite'),{type:'doughnut',data:{labels:['Conforme','Non conforme','À vérifier'],datasets:[{data:[conformes,non,total-conformes-non],backgroundColor:['#5A9E3A','#C0392B','#005A93']}]},options:{responsive:true,maintainAspectRatio:false}}));
+  charts.push(new Chart(document.getElementById('chartCategories'),{type:'bar',data:{labels:Object.keys(cat),datasets:[{label:'Problèmes',data:Object.values(cat),backgroundColor:'#ee7c22'}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true}}}}));
+  const topM=municip.length?municip[0][0]:'--';const maxM=Math.max(...mois,0);const moisFort=maxM?moisNoms[mois.indexOf(maxM)]:'--';
+  document.getElementById('analyseTexte').innerHTML=`<b>Résumé opérationnel :</b><br><br>Le secteur le plus visité est <b>${topM}</b>. La période la plus active est <b>${moisFort}</b>. Le taux de conformité actuel est <b>${taux}%</b>.<br><br><b>Utilisation recommandée :</b> cibler les secteurs avec plusieurs non-conformités pour planifier les rappels citoyens, la distribution de matériel et les suivis de prévention.`;
+  genererHeatmap(data);
+}
+function genererHeatmap(data){const pts=data.filter(v=>v.latitude&&v.longitude).map(v=>[parseFloat(v.latitude),parseFloat(v.longitude),Math.max(1,(v.analyse?.totalProblemes||1))]);if(!heatMapInstance){const base=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'});heatMapInstance=L.map('heatmap',{layers:[base]}).setView([48.85,-67.53],9);}if(heatLayer)heatMapInstance.removeLayer(heatLayer);heatLayer=L.heatLayer(pts,{radius:30,blur:22,maxZoom:13,gradient:{0.2:'#37a048',0.45:'#f4ed1f',0.7:'#ee7c22',1.0:'#c92127'}}).addTo(heatMapInstance);if(pts.length)heatMapInstance.fitBounds(pts.map(p=>[p[0],p[1]]),{padding:[30,30]});setTimeout(()=>heatMapInstance.invalidateSize(),300);}
+chargerVisites();setInterval(chargerVisites,60000);
+</script>
+</body>
+</html>
