@@ -1,360 +1,118 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>PVAF - Visites préventives résidentielles | MRC de La Matanie</title>
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#5c0000">
+<title>Circuits de prévention résidentielle | MRC de La Matanie</title>
+<link rel="icon" type="image/png" href="./logo-spi.png">
+<link rel="apple-touch-icon" href="./logo-spi.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 <style>
-:root{
-  --bleu:#003E6B;
-  --bleu2:#005A93;
-  --bleu3:#0074B8;
-  --gris:#F4F6F8;
-  --texte:#1f2937;
-  --muted:#64748b;
-  --vert:#5A9E3A;
-  --jaune:#D7A937;
-  --orange:#ee7c22;
-  --rouge:#C0392B;
-  --grisFonce:#6b7280;
-  --white:#ffffff;
-}
-
-*{box-sizing:border-box;}
-body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--gris);color:var(--texte);}
-
-.header{background:linear-gradient(135deg,var(--bleu),var(--bleu2));color:#fff;text-align:center;padding:38px 20px 28px;box-shadow:0 4px 20px rgba(0,0,0,.18);}
-.logo{max-height:130px;max-width:90%;filter:drop-shadow(0 4px 10px rgba(0,0,0,.25));}
-.header h1{margin:14px 0 6px;font-size:38px;letter-spacing:.3px;}
-.header p{margin:0;font-size:18px;opacity:.92;}
-#maj{margin-top:12px;display:inline-block;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.14);font-size:13px;}
-
-.navbar{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:16px 20px;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.06);position:sticky;top:0;z-index:900;}
-.nav-btn{border:none;border-radius:999px;padding:12px 18px;font-weight:700;cursor:pointer;background:#e8eef4;color:var(--bleu);transition:.2s;}
-.nav-btn:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.12);}
-.nav-btn.active{background:linear-gradient(135deg,var(--bleu),var(--bleu2));color:#fff;}
-
-.view{display:none;}
-.view.active{display:block;}
-
-.stats{display:flex;gap:15px;padding:20px;flex-wrap:wrap;}
-.card{background:#fff;border-radius:16px;padding:20px;flex:1;min-width:180px;box-shadow:0 4px 12px rgba(0,0,0,.08);transition:all .25s ease;}
-.card:hover{transform:translateY(-5px);box-shadow:0 10px 25px rgba(0,0,0,.15);}
-.card h2{margin:0;font-size:34px;color:var(--bleu);}
-.card p{margin:8px 0 0;color:#5b6472;}
-.card.green h2{color:var(--vert);}
-.card.red h2{color:var(--rouge);}
-.card.orange h2{color:var(--orange);}
-.card.blue h2{color:var(--bleu2);}
-
-.layout{display:flex;gap:20px;padding:20px;padding-top:0;}
-.sidebar{width:380px;background:#fff;border-radius:16px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,.08);max-height:75vh;overflow:auto;}
-.sidebar h3{margin:8px 0 12px;color:var(--bleu);}
-#map{flex:1;height:75vh;min-height:520px;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.08);}
-
-.filter-box{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;padding:12px;background:#f8fafc;border-radius:12px;}
-.filter-box input,.filter-box select{width:100%;border:1px solid #d1d5db;border-radius:10px;padding:10px;font-size:14px;background:#fff;}
-.filter-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.small-btn{border:none;border-radius:10px;padding:10px 12px;background:var(--bleu);color:white;font-weight:700;cursor:pointer;transition:.2s;}
-.small-btn:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(0,0,0,.18);}
-.secondary-btn{background:#e8eef4;color:var(--bleu);}
-
-.visite-item{padding:15px;margin-bottom:12px;border-radius:14px;background:#fff;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.08);transition:.2s;border-left:6px solid var(--bleu2);}
-.visite-item:hover{transform:translateX(5px);box-shadow:0 8px 18px rgba(0,0,0,.12);}
-.visite-numero{font-size:17px;font-weight:800;color:var(--bleu);margin-bottom:8px;}
-.visite-adresse{line-height:1.4;font-size:14px;}
-.visite-meta{margin-top:8px;color:#666;font-size:12px;line-height:1.45;}
-.badge{display:inline-block;padding:4px 8px;border-radius:999px;color:white;font-size:12px;font-weight:700;margin-top:8px;}
-
-.pvaf-icon{width:24px;height:24px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);}
-.leaflet-popup-content{margin:12px;}
-.popup-card{min-width:285px;font-family:Segoe UI,Arial,sans-serif;}
-.popup-header{color:white;padding:12px;border-radius:10px;font-weight:800;margin-bottom:10px;line-height:1.4;}
-.popup-section{font-weight:800;color:var(--bleu);margin-top:10px;}
-.popup-problem{background:#fff1f2;border-left:5px solid var(--rouge);border-radius:10px;padding:8px;margin-top:8px;font-size:13px;}
-.leaflet-control-layers{border-radius:12px !important;box-shadow:0 4px 12px rgba(0,0,0,.15) !important;}
-
-/* Page statistiques */
-.stats-page{padding:20px;}
-.stats-header{background:#fff;border-radius:18px;padding:22px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,.08);display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap;}
-.stats-header h2{margin:0;color:var(--bleu);font-size:30px;}
-.stats-header p{margin:6px 0 0;color:var(--muted);}
-.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:15px;margin-bottom:20px;}
-.kpi{background:#fff;border-radius:16px;padding:18px;box-shadow:0 4px 12px rgba(0,0,0,.08);}
-.kpi .label{color:var(--muted);font-size:13px;margin-bottom:8px;}
-.kpi .value{font-size:28px;font-weight:800;color:var(--bleu);}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
-.panel{background:#fff;border-radius:18px;padding:18px;box-shadow:0 4px 12px rgba(0,0,0,.08);}
-.panel h3{margin:0 0 14px;color:var(--bleu);}
-.chart-box{height:340px;position:relative;}
-.rank-list{display:flex;flex-direction:column;gap:10px;}
-.rank-item{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#f8fafc;border-radius:12px;padding:12px;border-left:6px solid var(--bleu2);}
-.rank-left{font-weight:700;color:#1f2937;}
-.rank-right{font-weight:800;color:var(--bleu);}
-.rank-bar{height:8px;background:#dbeafe;border-radius:99px;margin-top:8px;overflow:hidden;}
-.rank-bar div{height:8px;background:linear-gradient(90deg,var(--bleu2),var(--bleu3));border-radius:99px;}
-#heatmap{height:520px;border-radius:16px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.08);}
-.note{color:var(--muted);font-size:13px;line-height:1.45;}
-.empty-state{padding:18px;background:#f8fafc;border-radius:12px;color:var(--muted);}
-.question-list{display:flex;flex-direction:column;gap:8px;max-height:500px;overflow:auto;}
-.question-item{background:#f8fafc;border-radius:10px;padding:10px;font-size:13px;border-left:5px solid #cbd5e1;}
-.question-item.problem{border-left-color:var(--rouge);background:#fff1f2;}
-.question-item .q{font-weight:800;color:#334155;margin-bottom:4px;}
-.question-item .r{color:#475569;}
-
-@media(max-width:1000px){.kpi-grid{grid-template-columns:1fr 1fr;}.grid-2{grid-template-columns:1fr;}}
-@media(max-width:768px){
-  body{overflow-x:hidden;}
-  .header{padding:25px 15px;}
-  .header h1{font-size:28px;line-height:1.2;}
-  .logo{max-height:95px;}
-  .navbar{position:static;}
-  .stats{flex-direction:column;padding:15px;gap:12px;}
-  .layout{display:flex;flex-direction:column;padding:15px;gap:15px;}
-  #map{order:1;width:100%;height:65vh;min-height:420px;border-radius:14px;flex:none;}
-  .sidebar{order:2;width:100%;max-height:none;box-sizing:border-box;}
-  .card{width:100%;}
-  .filter-row{grid-template-columns:1fr;}
-  .stats-page{padding:15px;}
-  .kpi-grid{grid-template-columns:1fr;}
-  .chart-box{height:300px;}
-  #heatmap{height:420px;}
-}
+:root{--bg:#140000;--bg2:#520000;--red:#930000;--red2:#c30012;--ink:#20242b;--muted:#667085;--line:#e5e7eb;--card:#fff;--green:#218739;--orange:#e76f00;--yellow:#d9a400;--violet:#7a42b8;--blue:#1976b9;--gray:#7c8188;--brown:#754321;--pink:#ad1457;--shadow:0 12px 30px rgba(0,0,0,.22)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Segoe UI,Arial,sans-serif;color:var(--ink);background:linear-gradient(135deg,#090000,var(--bg2) 55%,#a60000)}button,input,select,textarea{font:inherit}button{cursor:pointer}
+.app{min-height:100vh}.top{background:linear-gradient(135deg,#080000,#520000 55%,#b00000);color:#fff;padding:18px 24px;display:flex;align-items:center;gap:16px;box-shadow:var(--shadow)}.top img{width:72px;height:72px;object-fit:contain}.top h1{font-size:25px;margin:0}.top p{margin:4px 0 0;opacity:.86}.top-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}.pill{border:1px solid #ffffff40;background:#ffffff16;color:#fff;padding:9px 12px;border-radius:999px;font-weight:700}.pill.ok{background:#166534}.pill.warn{background:#92400e}
+.nav{position:sticky;top:0;z-index:900;display:flex;gap:6px;padding:10px 14px;background:#220000f2;overflow:auto;box-shadow:0 5px 18px #0005}.nav button{white-space:nowrap;border:0;border-radius:10px;padding:10px 13px;background:transparent;color:#f7dada;font-weight:700}.nav button.active{background:#fff;color:#650000}.page{display:none;padding:18px;max-width:1600px;margin:auto}.page.active{display:block}
+.hero,.panel,.kpi{background:#fff;border-radius:18px;box-shadow:var(--shadow)}.hero{padding:20px;margin-bottom:16px;border-top:7px solid var(--red)}.hero-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.hero h2{margin:0;color:#5c0000}.hero p{color:var(--muted);margin:6px 0 0}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:0;border-radius:10px;padding:10px 13px;background:linear-gradient(135deg,#5c0000,#b40000);color:#fff;font-weight:700}.btn.secondary{background:#344054}.btn.light{background:#f3f4f6;color:#4b0000;border:1px solid #ddd}.btn.danger{background:#9b111e}.btn.small{padding:7px 9px;font-size:13px}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(145px,1fr));gap:12px;margin-bottom:16px}.kpi{padding:15px;border-left:6px solid var(--red)}.kpi span{font-size:12px;color:var(--muted);font-weight:700}.kpi strong{display:block;font-size:28px;color:#4b0000;margin-top:6px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.panel{padding:16px;margin-bottom:16px}.panel h3{margin:0 0 12px;color:#5c0000}.toolbar{display:grid;grid-template-columns:repeat(6,minmax(135px,1fr));gap:8px;margin-bottom:12px}.field label{display:block;font-size:12px;font-weight:700;color:#555;margin-bottom:5px}.field input,.field select,.field textarea{width:100%;border:1px solid #cfd4dc;border-radius:9px;padding:9px;background:#fff;color:#222}.field textarea{resize:vertical;min-height:84px}.map{height:66vh;min-height:520px;border-radius:14px;overflow:hidden}.map-layout{display:grid;grid-template-columns:360px 1fr;gap:16px}.list{max-height:66vh;overflow:auto}.item{border:1px solid #e5e7eb;border-left:7px solid var(--gray);border-radius:12px;padding:11px;margin-bottom:8px;background:#fff}.item.selected{box-shadow:0 0 0 3px #b4000038}.item-title{font-weight:800;color:#4b0000}.item-meta{font-size:13px;color:#667085;margin-top:4px}.status{display:inline-block;padding:5px 8px;border-radius:999px;color:#fff;font-size:11px;font-weight:800}.progress{height:13px;background:#eee;border-radius:999px;overflow:hidden}.progress>div{height:100%;background:linear-gradient(90deg,#7a0000,#d71920)}
+.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;font-size:13px}.table th{background:#3a0000;color:#fff;text-align:left;position:sticky;top:0}.table th,.table td{padding:9px;border-bottom:1px solid #e5e7eb;white-space:nowrap}.table tr:hover td{background:#fff5f5}.empty{text-align:center;padding:35px;color:#667085;border:2px dashed #d0d5dd;border-radius:14px}.legend{display:flex;gap:8px;flex-wrap:wrap}.legend span{font-size:12px;padding:6px 9px;border-radius:999px;color:#fff}.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.day{min-height:105px;border:1px solid #ddd;border-radius:10px;padding:6px;background:#fff}.day b{font-size:12px}.appt{font-size:11px;margin-top:5px;padding:5px;border-radius:6px;background:#efe2ff;border-left:4px solid var(--violet)}.chart{height:310px;position:relative}.notice{padding:12px;border-radius:10px;background:#fff7d6;border-left:5px solid #e0a400;color:#684b00}.notice.error{background:#fee2e2;border-color:#b91c1c;color:#7f1d1d}.badge{padding:5px 8px;border-radius:999px;background:#eee;font-size:12px;font-weight:700}.modal{display:none;position:fixed;inset:0;background:#0009;z-index:2000;padding:16px;align-items:center;justify-content:center}.modal.open{display:flex}.modal-card{width:min(860px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:18px;padding:18px;box-shadow:var(--shadow)}.modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.modal-head h3{color:#5c0000}.close{border:0;background:#eee;border-radius:50%;width:34px;height:34px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.full{grid-column:1/-1}.quick-status{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.quick-status button{padding:10px;border:1px solid #ddd;border-radius:10px;background:#fff;font-weight:700}.offline{position:fixed;right:14px;bottom:14px;background:#222;color:#fff;padding:9px 12px;border-radius:999px;z-index:1200;font-size:12px}.leaflet-popup-content{min-width:260px}
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.toolbar{grid-template-columns:repeat(3,1fr)}.map-layout{grid-template-columns:1fr}.list{max-height:360px}.grid3{grid-template-columns:1fr}.map{height:58vh}}
+@media(max-width:700px){.top{padding:12px}.top img{width:54px;height:54px}.top h1{font-size:18px}.top p{font-size:12px}.top-actions{width:100%;margin:0}.page{padding:10px}.kpis{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}.quick-status{grid-template-columns:1fr 1fr}.calendar{grid-template-columns:1fr}.day{min-height:auto}.map{min-height:430px}.nav{position:static}}
 </style>
 </head>
 <body>
-<div class="header">
-  <img src="Logo-SPI-Transparent.png" class="logo" alt="Prévention incendie">
-  <h1>Visites préventives résidentielles</h1>
-  <p>MRC de La Matanie - Programme de vérification des avertisseurs</p>
-  <div id="maj">Dernière synchronisation : --</div>
+<div class="app">
+<header class="top"><img src="./logo-spi.png" alt="Logo SPI"><div><h1>Circuits de prévention résidentielle</h1><p>Planification, visites, rendez-vous, suivis et progression cartographique</p></div><div class="top-actions"><button class="pill" id="syncBtn">↻ Synchroniser</button><button class="pill" id="outlookBtn">Outlook non connecté</button><button class="pill" id="userBtn">Utilisateur</button></div></header>
+<nav class="nav" id="nav"><button data-page="dashboard" class="active">Tableau de bord</button><button data-page="mapPage">Carte</button><button data-page="routePage">Circuit du jour</button><button data-page="appointments">Rendez-vous</button><button data-page="followups">Suivis</button><button data-page="corrections">Adresses à corriger</button><button data-page="statistics">Statistiques</button><button data-page="admin">Administration</button></nav>
+
+<section id="dashboard" class="page active"><div class="hero"><div class="hero-row"><div><h2>Vue d'ensemble</h2><p>Avancement des circuits et priorités opérationnelles.</p></div><div class="actions"><button class="btn" onclick="showPage('mapPage')">Ouvrir la carte</button><button class="btn secondary" onclick="openResidence()">Ajouter une adresse</button></div></div></div><div class="kpis" id="kpiGrid"></div><div class="grid2"><div class="panel"><h3>Avancement par circuit</h3><div id="circuitProgress"></div></div><div class="panel"><h3>Priorités</h3><div id="priorities"></div></div></div><div class="grid2"><div class="panel"><h3>Visites des 14 derniers jours</h3><div class="chart"><canvas id="visitsChart"></canvas></div></div><div class="panel"><h3>Rendez-vous à venir</h3><div id="upcomingAppointments"></div></div></div></section>
+
+<section id="mapPage" class="page"><div class="hero"><div class="hero-row"><div><h2>Carte des visites</h2><p>Filtre les résidences et mets à jour les statuts directement sur la carte.</p></div><div class="actions"><button class="btn" onclick="fitMarkers()">Cadrer les résultats</button><button class="btn secondary" onclick="exportCSV()">Exporter CSV</button></div></div></div><div class="panel"><div class="toolbar" id="filters"><div class="field"><label>Recherche</label><input id="searchFilter" placeholder="Adresse ou no prévention"></div><div class="field"><label>Municipalité</label><select id="municipalityFilter"></select></div><div class="field"><label>Circuit</label><select id="circuitFilter"></select></div><div class="field"><label>Agent</label><select id="agentFilter"></select></div><div class="field"><label>Statut</label><select id="statusFilter"></select></div><div class="field"><label>Pair / impair</label><select id="parityFilter"><option value="">Tous</option><option value="pair">Pairs</option><option value="impair">Impairs</option></select></div></div><div class="legend" id="legend"></div></div><div class="map-layout"><div class="panel list" id="residenceList"></div><div class="panel"><div id="mainMap" class="map"></div></div></div></section>
+
+<section id="routePage" class="page"><div class="hero"><div class="hero-row"><div><h2>Circuit du jour</h2><p>Prépare une séquence et avance adresse par adresse.</p></div><div class="actions"><button class="btn" onclick="buildRoute()">Générer la séquence</button><button class="btn secondary" onclick="resumeRoute()">Reprendre</button></div></div></div><div class="panel"><div class="toolbar"><div class="field"><label>Circuit</label><select id="routeCircuit"></select></div><div class="field"><label>Agent</label><select id="routeAgent"></select></div><div class="field"><label>Ordre</label><select id="routeOrder"><option value="asc">Numéros croissants</option><option value="desc">Numéros décroissants</option><option value="pair">Pairs puis impairs</option><option value="impair">Impairs puis pairs</option><option value="nearest">Plus proche voisin</option></select></div><div class="field"><label>Inclure</label><select id="routeInclude"><option value="remaining">Non visitées et suivis</option><option value="all">Toutes</option><option value="absent">Absents seulement</option></select></div></div></div><div class="grid2"><div class="panel"><h3>Adresse actuelle</h3><div id="currentStop" class="empty">Aucun circuit généré.</div></div><div class="panel"><h3>Progression</h3><div id="routeProgress"></div></div></div><div class="panel"><h3>Ordre de visite</h3><div id="routeList"></div></div></section>
+
+<section id="appointments" class="page"><div class="hero"><div class="hero-row"><div><h2>Rendez-vous</h2><p>Planifie une visite et crée automatiquement l'événement dans Outlook.</p></div><div class="actions"><button class="btn" onclick="openAppointment()">Nouveau rendez-vous</button><button class="btn secondary" onclick="connectOutlook()">Connecter Outlook</button></div></div></div><div id="outlookNotice" class="notice">Configure d'abord le Tenant ID, le Client ID et l'URL de redirection dans Administration.</div><div class="grid2" style="margin-top:16px"><div class="panel"><h3>Calendrier</h3><div class="actions"><button class="btn light small" onclick="changeMonth(-1)">‹</button><span class="badge" id="calendarMonth"></span><button class="btn light small" onclick="changeMonth(1)">›</button></div><div id="calendar" class="calendar" style="margin-top:10px"></div></div><div class="panel"><h3>Liste des rendez-vous</h3><div id="appointmentList"></div></div></div></section>
+
+<section id="followups" class="page"><div class="hero"><h2>Suivis</h2><p>Non-conformités, absences, avis et échéances.</p></div><div class="panel"><div class="toolbar"><div class="field"><label>Type</label><select id="followStatus"></select></div><div class="field"><label>Échéance</label><select id="followDue"><option value="">Toutes</option><option value="late">En retard</option><option value="7">7 prochains jours</option><option value="30">30 prochains jours</option></select></div><div class="field"><label>Agent</label><select id="followAgent"></select></div></div><div class="table-wrap"><table class="table"><thead><tr><th>Adresse</th><th>Statut</th><th>Agent</th><th>Échéance</th><th>Note</th><th>Action</th></tr></thead><tbody id="followTable"></tbody></table></div></div></section>
+
+<section id="corrections" class="page"><div class="hero"><h2>Adresses à corriger</h2><p>Coordonnées manquantes, géocodage échoué et doublons potentiels.</p></div><div class="panel"><div id="correctionList"></div></div></section>
+
+<section id="statistics" class="page"><div class="hero"><h2>Statistiques</h2><p>Rendement, conformité, absences et progression des circuits.</p></div><div class="kpis" id="statKpis"></div><div class="grid2"><div class="panel"><h3>Répartition des statuts</h3><div class="chart"><canvas id="statusChart"></canvas></div></div><div class="panel"><h3>Visites par agent</h3><div class="chart"><canvas id="agentChart"></canvas></div></div></div><div class="grid2"><div class="panel"><h3>Progression par municipalité</h3><div class="chart"><canvas id="municipalityChart"></canvas></div></div><div class="panel"><h3>Tendance hebdomadaire</h3><div class="chart"><canvas id="weeklyChart"></canvas></div></div></div></section>
+
+<section id="admin" class="page"><div class="hero"><h2>Administration</h2><p>Configuration de l'API, Microsoft Outlook, utilisateurs et circuits.</p></div><div class="grid2"><div class="panel"><h3>Cloudflare Worker</h3><div class="field"><label>URL de l'API</label><input id="apiUrl" placeholder="https://votre-worker.workers.dev"></div><div class="field"><label>Clé d'écriture optionnelle</label><input id="apiKey" type="password" placeholder="Conservée seulement dans ce navigateur"></div><button class="btn" onclick="saveConfig()">Enregistrer</button> <button class="btn secondary" onclick="testApi()">Tester l'API</button><p class="item-meta">Routes attendues : GET /residences, /circuits, /users, /appointments; PATCH /residences/:id; POST/PATCH/DELETE /appointments.</p></div><div class="panel"><h3>Microsoft Outlook</h3><div class="field"><label>Tenant ID</label><input id="tenantId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></div><div class="field"><label>Client ID de l'application Entra</label><input id="clientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></div><div class="field"><label>URL de redirection GitHub Pages</label><input id="redirectUri" placeholder="https://utilisateur.github.io/depot/"></div><div class="field"><label>Durée par défaut</label><select id="defaultDuration"><option value="30">30 minutes</option><option value="45">45 minutes</option><option value="60">60 minutes</option></select></div><div class="field"><label>Rappel Outlook</label><select id="reminderMinutes"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">60 minutes</option><option value="1440">1 jour</option></select></div><button class="btn" onclick="saveConfig()">Enregistrer</button> <button class="btn secondary" onclick="connectOutlook()">Se connecter à Outlook</button></div></div><div class="grid2"><div class="panel"><h3>Utilisateurs</h3><div id="userAdmin"></div></div><div class="panel"><h3>Circuits</h3><div id="circuitAdmin"></div></div></div><div class="panel"><h3>Sauvegarde locale</h3><button class="btn secondary" onclick="downloadBackup()">Télécharger JSON</button> <button class="btn light" onclick="clearLocalCache()">Vider le cache</button><p class="item-meta">La sauvegarde locale est un filet de sécurité. Cloudflare D1 reste la source officielle.</p></div></section>
 </div>
+<div class="offline" id="networkStatus">En ligne</div>
 
-<nav class="navbar">
-  <button id="btnCarte" class="nav-btn active" onclick="afficherVue('carte')">🗺️ Carte</button>
-  <button id="btnStats" class="nav-btn" onclick="afficherVue('stats')">📊 Statistiques</button>
-</nav>
+<div class="modal" id="residenceModal"><div class="modal-card"><div class="modal-head"><h3>Fiche de résidence</h3><button class="close" onclick="closeModal('residenceModal')">×</button></div><div id="residenceForm"></div></div></div>
+<div class="modal" id="appointmentModal"><div class="modal-card"><div class="modal-head"><h3>Rendez-vous</h3><button class="close" onclick="closeModal('appointmentModal')">×</button></div><form id="appointmentForm" class="form-grid"><input type="hidden" id="appointmentId"><div class="field full"><label>Résidence</label><select id="appointmentResidence" required></select></div><div class="field"><label>Date</label><input id="appointmentDate" type="date" required></div><div class="field"><label>Heure</label><input id="appointmentTime" type="time" required></div><div class="field"><label>Durée</label><select id="appointmentDuration"><option value="30">30 min</option><option value="45">45 min</option><option value="60">60 min</option></select></div><div class="field"><label>Agent</label><select id="appointmentAgent"></select></div><div class="field"><label>Statut</label><select id="appointmentStatus"><option>Planifié</option><option>Confirmé verbalement</option><option>Réalisé</option><option>Reporté</option><option>Annulé</option><option>Absent au rendez-vous</option></select></div><div class="field full"><label>Note opérationnelle non nominative</label><textarea id="appointmentNote"></textarea></div><label class="full"><input id="appointmentOutlook" type="checkbox" checked> Ajouter ou synchroniser automatiquement dans Outlook</label><div class="actions full"><button class="btn" type="submit">Enregistrer</button><button class="btn light" type="button" onclick="closeModal('appointmentModal')">Annuler</button></div></form></div></div>
 
-<section id="vueCarte" class="view active">
-  <div class="stats">
-    <div class="card blue"><h2 id="totalVisites">0</h2><p>Visites totales</p></div>
-    <div class="card green"><h2 id="visitesConformes">0</h2><p>Conformes</p></div>
-    <div class="card red"><h2 id="visitesNonConformes">0</h2><p>Non conformes</p></div>
-    <div class="card orange"><h2 id="visitesPrioritaires">0</h2><p>Prioritaires</p></div>
-  </div>
-
-  <div class="layout">
-    <div class="sidebar">
-      <h3>Filtres</h3>
-      <div class="filter-box">
-        <input id="searchInput" placeholder="🔎 Rechercher adresse, propriétaire, numéro..." oninput="appliquerFiltres()">
-        <div class="filter-row">
-          <select id="filtreStatut" onchange="appliquerFiltres()"><option value="">Tous les statuts</option></select>
-          <select id="filtreCircuit" onchange="appliquerFiltres()"><option value="">Tous les circuits</option></select>
-        </div>
-        <div class="filter-row">
-          <select id="filtreResponsable" onchange="appliquerFiltres()"><option value="">Tous les responsables</option></select>
-          <select id="filtreMunicipalite" onchange="appliquerFiltres()"><option value="">Toutes les municipalités</option></select>
-        </div>
-        <button class="small-btn secondary-btn" onclick="resetFiltres()">Réinitialiser les filtres</button>
-      </div>
-
-      <h3>Visites</h3>
-      <div id="listeVisites"></div>
-    </div>
-    <div id="map"></div>
-  </div>
-</section>
-
-<section id="vueStats" class="view">
-  <div class="stats-page">
-    <div class="stats-header">
-      <div>
-        <h2>Statistiques PVAF</h2>
-        <p>Conformité, secteurs problématiques, circuits, responsables, périodes fortes et carte thermique.</p>
-      </div>
-      <div class="stats-actions">
-        <button class="small-btn" onclick="chargerVisites(true)">🔄 Actualiser</button>
-        <button class="small-btn secondary-btn" onclick="afficherVue('carte')">🗺️ Retour à la carte</button>
-      </div>
-    </div>
-
-    <div class="kpi-grid">
-      <div class="kpi"><div class="label">Total des visites</div><div class="value" id="kpiTotal">0</div></div>
-      <div class="kpi"><div class="label">Taux de conformité</div><div class="value" id="kpiTaux">0%</div></div>
-      <div class="kpi"><div class="label">Top municipalité</div><div class="value" id="kpiTopMunicipalite">--</div></div>
-      <div class="kpi"><div class="label">Problèmes fumée</div><div class="value" id="kpiFumee">0</div></div>
-    </div>
-
-    <div class="grid-2">
-      <div class="panel"><h3>Histogramme par municipalité</h3><div class="chart-box"><canvas id="chartMunicipalites"></canvas></div></div>
-      <div class="panel"><h3>Visites par mois</h3><div class="chart-box"><canvas id="chartMois"></canvas></div></div>
-    </div>
-
-    <div class="grid-2">
-      <div class="panel"><h3>Classement Top 10 - Plus de visites</h3><div id="topMunicipalites" class="rank-list"></div></div>
-      <div class="panel"><h3>Secteurs les moins visités</h3><div id="bottomMunicipalites" class="rank-list"></div></div>
-    </div>
-
-    <div class="grid-2">
-      <div class="panel"><h3>Conformité</h3><div class="chart-box"><canvas id="chartConformite"></canvas></div></div>
-      <div class="panel"><h3>Problèmes par catégorie</h3><div class="chart-box"><canvas id="chartCategories"></canvas></div></div>
-    </div>
-
-    <div class="grid-2">
-      <div class="panel"><h3>Top problèmes détectés</h3><div id="topProblemes" class="rank-list"></div></div>
-      <div class="panel"><h3>Analyse opérationnelle</h3><div id="analyseTexte" class="note"></div></div>
-    </div>
-
-    <div class="panel">
-      <h3>Carte thermique des visites et non-conformités</h3>
-      <p class="note">La carte thermique indique les secteurs où les visites et dossiers problématiques sont les plus concentrés.</p>
-      <div id="heatmap"></div>
-    </div>
-  </div>
-</section>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 <script>
-const API_URL='https://pvaf.oussama-refas.workers.dev/';
-let visitesCache=[];
-let visitesFiltrees=[];
-let charts=[];
-let heatMapInstance=null;
-let heatLayer=null;
-
-const moisNoms=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'});
-const topo=L.tileLayer('https://tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'© OpenTopoMap'});
-const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri'});
-const map=L.map('map',{layers:[osm]}).setView([48.85,-67.53],9);
-L.control.layers({'🗺️ Standard':osm,'⛰️ Topographique':topo,'🛰️ Satellite':satellite},null,{collapsed:false}).addTo(map);
-setTimeout(()=>map.invalidateSize(),500);
-window.addEventListener('resize',()=>setTimeout(()=>{map.invalidateSize();if(heatMapInstance)heatMapInstance.invalidateSize();},300));
-
-const visiteLayer=L.markerClusterGroup({showCoverageOnHover:false,spiderfyOnMaxZoom:true,maxClusterRadius:45});
-map.addLayer(visiteLayer);
-
-function afficherVue(vue){
-  document.getElementById('vueCarte').classList.toggle('active',vue==='carte');
-  document.getElementById('vueStats').classList.toggle('active',vue==='stats');
-  document.getElementById('btnCarte').classList.toggle('active',vue==='carte');
-  document.getElementById('btnStats').classList.toggle('active',vue==='stats');
-  if(vue==='carte')setTimeout(()=>map.invalidateSize(),250);
-  if(vue==='stats')setTimeout(()=>{genererStatistiques();if(heatMapInstance)heatMapInstance.invalidateSize();},250);
-}
-
-function couleurVisite(v){
-  const s=v?.analyse?.statutConformite || 'À vérifier';
-  const p=v?.analyse?.niveauPriorite || '';
-  if(p==='Élevé')return '#ee7c22';
-  if(s==='Conforme')return '#5A9E3A';
-  if(s==='Non conforme')return '#C0392B';
-  return '#005A93';
-}
-function creerIcone(couleur,taille=24){return L.divIcon({className:'',html:`<div class="pvaf-icon" style="background:${couleur};width:${taille}px;height:${taille}px;"></div>`,iconSize:[taille,taille],iconAnchor:[taille/2,taille/2]});}
-function getId(v){return v.numeroPrevention||v.id||v.recordID||'--';}
-function getAdresse(v){return v.adresse||'Adresse non précisée';}
-function getMunicipalite(v){return v.municipalite||'Non précisée';}
-function getResponsable(v){return v.responsable||'Non précisé';}
-function getCircuit(v){return v.circuit||'Non précisé';}
-function getStatut(v){return v?.analyse?.statutConformite||'À vérifier';}
-function dateRef(v){return v.dateVisite||v.dateReception||'';}
-function dateMois(v){const d=new Date(dateRef(v));return isNaN(d)?'Non précisé':moisNoms[d.getMonth()];}
-function topProblemes(v,limite=4){return (v?.analyse?.problemes||[]).slice(0,limite);}
-
-async function chargerVisites(recalculStats=false){
-  try{
-    const r=await fetch(API_URL+'?t='+Date.now());
-    const data=await r.json();
-    visitesCache=Array.isArray(data)?data:[];
-    visitesFiltrees=[...visitesCache];
-    remplirFiltres();
-    appliquerFiltres(false);
-    if(recalculStats||document.getElementById('vueStats').classList.contains('active'))genererStatistiques();
-    document.getElementById('maj').innerText='Dernière synchronisation : '+new Date().toLocaleTimeString('fr-CA');
-  }catch(e){console.error('Erreur chargement PVAF',e);}
-}
-
-function remplirFiltres(){
-  const sets={
-    filtreStatut:new Set(),filtreCircuit:new Set(),filtreResponsable:new Set(),filtreMunicipalite:new Set()
-  };
-  visitesCache.forEach(v=>{sets.filtreStatut.add(getStatut(v));sets.filtreCircuit.add(getCircuit(v));sets.filtreResponsable.add(getResponsable(v));sets.filtreMunicipalite.add(getMunicipalite(v));});
-  Object.entries(sets).forEach(([id,set])=>{
-    const sel=document.getElementById(id);const current=sel.value;const first=sel.options[0].text;
-    sel.innerHTML=`<option value="">${first}</option>`;
-    [...set].filter(Boolean).sort().forEach(x=>{const o=document.createElement('option');o.value=x;o.textContent=x;sel.appendChild(o);});
-    sel.value=current;
-  });
-}
-function resetFiltres(){['searchInput','filtreStatut','filtreCircuit','filtreResponsable','filtreMunicipalite'].forEach(id=>document.getElementById(id).value='');appliquerFiltres();}
-function appliquerFiltres(updateStats=true){
-  const q=document.getElementById('searchInput').value.toLowerCase().trim();
-  const st=document.getElementById('filtreStatut').value;
-  const ci=document.getElementById('filtreCircuit').value;
-  const re=document.getElementById('filtreResponsable').value;
-  const mu=document.getElementById('filtreMunicipalite').value;
-  visitesFiltrees=visitesCache.filter(v=>{
-    const texte=[getId(v),getAdresse(v),v.proprietaire,v.contact,getMunicipalite(v),getCircuit(v),getResponsable(v),getStatut(v)].join(' ').toLowerCase();
-    return (!q||texte.includes(q))&&(!st||getStatut(v)===st)&&(!ci||getCircuit(v)===ci)&&(!re||getResponsable(v)===re)&&(!mu||getMunicipalite(v)===mu);
-  });
-  afficherVisitesSurCarte();
-  if(updateStats&&document.getElementById('vueStats').classList.contains('active'))genererStatistiques();
-}
-function afficherVisitesSurCarte(){
-  visiteLayer.clearLayers();document.getElementById('listeVisites').innerHTML='';
-  const bounds=[];let conformes=0,non=0,prioritaires=0;
-  visitesFiltrees.forEach(v=>{
-    if(getStatut(v)==='Conforme')conformes++;
-    if(getStatut(v)==='Non conforme')non++;
-    if(['Prioritaire','Élevé'].includes(v?.analyse?.niveauPriorite))prioritaires++;
-    if(!v.latitude||!v.longitude)return;
-    const lat=parseFloat(v.latitude),lon=parseFloat(v.longitude);if(isNaN(lat)||isNaN(lon))return;
-    bounds.push([lat,lon]);const c=couleurVisite(v);
-    const marker=L.marker([lat,lon],{icon:creerIcone(c,24)}).addTo(visiteLayer);
-    const problemes=topProblemes(v).map(p=>`<div class="popup-problem"><b>${p.categorie}</b><br>${p.question}<br><i>Réponse : ${p.reponse}</i></div>`).join('') || '<div class="note">Aucun problème majeur détecté.</div>';
-    marker.bindPopup(`<div class="popup-card"><div class="popup-header" style="background:${c};">🏠 Visite #${getId(v)}<br>${getStatut(v)}</div><div class="popup-section">📍 Adresse</div>${getAdresse(v)}<div class="popup-section">🏘️ Municipalité</div>${getMunicipalite(v)}<div class="popup-section">🧭 Circuit</div>${getCircuit(v)}<div class="popup-section">👤 Responsable</div>${getResponsable(v)}<div class="popup-section">📅 Date</div>${dateRef(v)||'Non précisée'}<div class="popup-section">⚠️ Problèmes principaux</div>${problemes}</div>`);
-    marker.on('mouseover',()=>marker.setIcon(creerIcone(c,32)));marker.on('mouseout',()=>marker.setIcon(creerIcone(c,24)));
-    const item=document.createElement('div');item.className='visite-item';item.style.borderLeft='6px solid '+c;
-    item.innerHTML=`<div class="visite-numero">🏠 Visite #${getId(v)}</div><div class="visite-adresse">📍 ${getAdresse(v)}</div><div class="visite-meta">${getMunicipalite(v)}<br>Responsable : ${getResponsable(v)}<br>Date : ${dateRef(v)||'Non précisée'}</div><span class="badge" style="background:${c};">${getStatut(v)}</span>`;
-    item.onclick=()=>{map.flyTo([lat,lon],16,{duration:1.2});setTimeout(()=>marker.openPopup(),500);};document.getElementById('listeVisites').appendChild(item);
-  });
-  document.getElementById('totalVisites').innerText=visitesFiltrees.length;
-  document.getElementById('visitesConformes').innerText=conformes;
-  document.getElementById('visitesNonConformes').innerText=non;
-  document.getElementById('visitesPrioritaires').innerText=prioritaires;
-  if(bounds.length)map.fitBounds(bounds,{padding:[30,30]});setTimeout(()=>map.invalidateSize(),300);
-}
-function countBy(arr,fn){const o={};arr.forEach(x=>{const k=fn(x)||'Non précisé';o[k]=(o[k]||0)+1;});return o;}
-function destroyCharts(){charts.forEach(c=>c.destroy());charts=[];}
-function rankHtml(id,entries,max){const el=document.getElementById(id);el.innerHTML='';if(!entries.length){el.innerHTML='<div class="empty-state">Aucune donnée disponible.</div>';return;}entries.forEach(([nom,val],i)=>{const pct=max?Math.round((val/max)*100):0;const div=document.createElement('div');div.className='rank-item';div.innerHTML=`<div style="flex:1"><div class="rank-left">${i+1}. ${nom}</div><div class="rank-bar"><div style="width:${pct}%"></div></div></div><div class="rank-right">${val}</div>`;el.appendChild(div);});}
-function genererStatistiques(){
-  destroyCharts();const data=visitesFiltrees;const total=data.length;const conformes=data.filter(v=>getStatut(v)==='Conforme').length;const non=data.filter(v=>getStatut(v)==='Non conforme').length;const taux=total?Math.round((conformes/total)*100):0;
-  const municip=Object.entries(countBy(data,getMunicipalite)).sort((a,b)=>b[1]-a[1]);const topTen=municip.slice(0,10);const bottom=[...municip].sort((a,b)=>a[1]-b[1]).slice(0,10);
-  const moisObj=countBy(data,dateMois);const mois=moisNoms.map(m=>moisObj[m]||0);const cat={Fumée:0,CO:0,Électricité:0,Évacuation:0,'Numéro civique':0,Contact:0,Chauffage:0};
-  const problemQ={}; data.forEach(v=>{const a=v.analyse||{};cat.Fumée+=a.problemesFumee||0;cat.CO+=a.problemesCO||0;cat.Électricité+=a.problemesElectriques||0;cat.Évacuation+=a.problemesEvacuation||0;cat['Numéro civique']+=a.problemesNumeroCivique||0;cat.Contact+=a.problemesContact||0;cat.Chauffage+=a.problemesChauffage||0;(a.problemes||[]).forEach(p=>{problemQ[p.question]=(problemQ[p.question]||0)+1;});});
-  document.getElementById('kpiTotal').innerText=total;document.getElementById('kpiTaux').innerText=taux+'%';document.getElementById('kpiTopMunicipalite').innerText=municip.length?municip[0][0]:'--';document.getElementById('kpiFumee').innerText=cat.Fumée;
-  rankHtml('topMunicipalites',topTen,municip.length?municip[0][1]:0);rankHtml('bottomMunicipalites',bottom,municip.length?municip[0][1]:0);rankHtml('topProblemes',Object.entries(problemQ).sort((a,b)=>b[1]-a[1]).slice(0,10),Math.max(...Object.values(problemQ),0));
-  charts.push(new Chart(document.getElementById('chartMunicipalites'),{type:'bar',data:{labels:topTen.map(e=>e[0]),datasets:[{data:topTen.map(e=>e[1]),backgroundColor:'#005A93'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}}));
-  charts.push(new Chart(document.getElementById('chartMois'),{type:'bar',data:{labels:moisNoms,datasets:[{label:'Visites',data:mois,backgroundColor:'#5A9E3A'}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true}}}}));
-  charts.push(new Chart(document.getElementById('chartConformite'),{type:'doughnut',data:{labels:['Conforme','Non conforme','À vérifier'],datasets:[{data:[conformes,non,total-conformes-non],backgroundColor:['#5A9E3A','#C0392B','#005A93']}]},options:{responsive:true,maintainAspectRatio:false}}));
-  charts.push(new Chart(document.getElementById('chartCategories'),{type:'bar',data:{labels:Object.keys(cat),datasets:[{label:'Problèmes',data:Object.values(cat),backgroundColor:'#ee7c22'}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true}}}}));
-  const topM=municip.length?municip[0][0]:'--';const maxM=Math.max(...mois,0);const moisFort=maxM?moisNoms[mois.indexOf(maxM)]:'--';
-  document.getElementById('analyseTexte').innerHTML=`<b>Résumé opérationnel :</b><br><br>Le secteur le plus visité est <b>${topM}</b>. La période la plus active est <b>${moisFort}</b>. Le taux de conformité actuel est <b>${taux}%</b>.<br><br><b>Utilisation recommandée :</b> cibler les secteurs avec plusieurs non-conformités pour planifier les rappels citoyens, la distribution de matériel et les suivis de prévention.`;
-  genererHeatmap(data);
-}
-function genererHeatmap(data){const pts=data.filter(v=>v.latitude&&v.longitude).map(v=>[parseFloat(v.latitude),parseFloat(v.longitude),Math.max(1,(v.analyse?.totalProblemes||1))]);if(!heatMapInstance){const base=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'});heatMapInstance=L.map('heatmap',{layers:[base]}).setView([48.85,-67.53],9);}if(heatLayer)heatMapInstance.removeLayer(heatLayer);heatLayer=L.heatLayer(pts,{radius:30,blur:22,maxZoom:13,gradient:{0.2:'#37a048',0.45:'#f4ed1f',0.7:'#ee7c22',1.0:'#c92127'}}).addTo(heatMapInstance);if(pts.length)heatMapInstance.fitBounds(pts.map(p=>[p[0],p[1]]),{padding:[30,30]});setTimeout(()=>heatMapInstance.invalidateSize(),300);}
-chargerVisites();setInterval(chargerVisites,60000);
+const STATUS={
+'Non visitée':'#7c8188','Conforme':'#218739','Non conforme, 1er avis':'#c30012','Non conforme, dernier avis':'#710000','Absent, 1re tentative':'#e76f00','Absent, 2e tentative':'#b85300','À rappeler':'#d9a400','Rendez-vous planifié':'#7a42b8','Refus':'#222','Incapacité':'#1976b9','Bâtiment vacant':'#607d8b','Adresse inexistante':'#754321','Rénovation':'#00838f','Recatégorisation':'#5d4037','Suivi requis':'#ad1457','Dossier fermé':'#365314'};
+const VISITED=new Set(['Conforme','Non conforme, 1er avis','Non conforme, dernier avis','Refus','Incapacité','Bâtiment vacant','Adresse inexistante','Rénovation','Recatégorisation','Dossier fermé']);
+const FOLLOW=new Set(['Non conforme, 1er avis','Non conforme, dernier avis','Absent, 1re tentative','Absent, 2e tentative','À rappeler','Rendez-vous planifié','Suivi requis']);
+let data={residences:[],circuits:[],users:[],appointments:[],visits:[]};let currentUser=null,selectedResidence=null,map,markers,bounds=[],charts={},route=[],routeIndex=0,calendarDate=new Date(),msalApp=null,graphAccount=null;
+const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+function config(){return JSON.parse(localStorage.getItem('pvaf_config')||'{}')}function saveConfig(){localStorage.setItem('pvaf_config',JSON.stringify({apiUrl:$('apiUrl').value.trim().replace(/\/$/,''),apiKey:$('apiKey').value,tenantId:$('tenantId').value.trim(),clientId:$('clientId').value.trim(),redirectUri:$('redirectUri').value.trim(),defaultDuration:$('defaultDuration').value,reminderMinutes:$('reminderMinutes').value}));alert('Configuration enregistrée.');initMsal()}
+function loadConfig(){const c=config();['apiUrl','apiKey','tenantId','clientId','redirectUri','defaultDuration','reminderMinutes'].forEach(k=>{if($(k)&&c[k]!=null)$(k).value=c[k]})}
+async function api(path,opts={}){const c=config(),url=(c.apiUrl||'')+path;if(!c.apiUrl)throw new Error('API Cloudflare non configurée');const headers={'Content-Type':'application/json',...(c.apiKey?{'X-API-Key':c.apiKey}:{})};try{const r=await fetch(url,{...opts,headers:{...headers,...opts.headers}});if(!r.ok)throw new Error('HTTP '+r.status);return r.status===204?null:r.json()}catch(e){if(opts.method&&opts.method!=='GET')queueOffline(path,opts);throw e}}
+function queueOffline(path,opts){const q=JSON.parse(localStorage.getItem('pvaf_queue')||'[]');q.push({path,opts,createdAt:new Date().toISOString()});localStorage.setItem('pvaf_queue',JSON.stringify(q))}
+async function flushQueue(){if(!navigator.onLine)return;const q=JSON.parse(localStorage.getItem('pvaf_queue')||'[]'),left=[];for(const item of q){try{await api(item.path,item.opts)}catch(e){left.push(item)}}localStorage.setItem('pvaf_queue',JSON.stringify(left));updateNetwork()}
+async function loadAll(force=false){setSync(true);try{const cached=JSON.parse(localStorage.getItem('pvaf_cache')||'null');if(cached&&!force) data=cached;const [r,c,u,a,v]=await Promise.all([api('/residences'),api('/circuits'),api('/users'),api('/appointments'),api('/visits').catch(()=>[])]);data={residences:r||[],circuits:c||[],users:u||[],appointments:a||[],visits:v||[]};localStorage.setItem('pvaf_cache',JSON.stringify(data));currentUser=currentUser||data.users[0]||{id:'local',name:'Utilisateur local',role:'agent'};renderAll()}catch(e){renderAll();showApiError(e.message)}finally{setSync(false)}}
+function setSync(on){$('syncBtn').textContent=on?'Synchronisation…':'↻ Synchroniser'}function showApiError(msg){$('networkStatus').textContent='Données locales';$('networkStatus').className='offline';console.warn(msg)}
+function updateNetwork(){$('networkStatus').textContent=navigator.onLine?'En ligne':'Hors ligne';$('networkStatus').style.background=navigator.onLine?'#166534':'#9b111e'}
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));if(id==='mapPage')setTimeout(()=>{initMap();map.invalidateSize();renderMap()},200);if(id==='statistics')renderStatistics();if(id==='appointments')renderAppointments()}
+function options(values,all='Tous'){return `<option value="">${all}</option>`+[...new Set(values.filter(Boolean))].sort().map(v=>`<option>${esc(v)}</option>`).join('')}
+function renderAll(){renderSelectors();renderDashboard();renderMapList();renderAppointments();renderFollowups();renderCorrections();renderAdmin();$('userBtn').textContent=currentUser?.name||'Utilisateur'}
+function renderSelectors(){const R=data.residences,C=data.circuits,U=data.users;$('municipalityFilter').innerHTML=options(R.map(x=>x.municipality),'Toutes');$('circuitFilter').innerHTML=options(C.map(x=>x.name),'Tous');$('agentFilter').innerHTML=options(U.map(x=>x.name),'Tous');$('statusFilter').innerHTML=options(Object.keys(STATUS),'Tous');$('routeCircuit').innerHTML=options(C.map(x=>x.name),'Choisir');$('routeAgent').innerHTML=options(U.map(x=>x.name),'Tous');$('followStatus').innerHTML=options([...FOLLOW],'Tous');$('followAgent').innerHTML=options(U.map(x=>x.name),'Tous');$('appointmentAgent').innerHTML=options(U.map(x=>x.name),'Choisir');$('appointmentResidence').innerHTML='<option value="">Choisir une adresse</option>'+R.slice().sort((a,b)=>(a.address||'').localeCompare(b.address||'')).map(x=>`<option value="${x.id}">${esc(x.address)}</option>`).join('');$('legend').innerHTML=Object.entries(STATUS).map(([s,c])=>`<span style="background:${c}">${esc(s)}</span>`).join('')}
+function statusOf(r){return r.status||'Non visitée'}function isVisited(r){return VISITED.has(statusOf(r))}function residenceAgent(r){return data.users.find(u=>u.id===r.agentId)?.name||r.agent||''}function circuitName(r){return data.circuits.find(c=>c.id===r.circuitId)?.name||r.circuit||''}
+function metrics(){const R=data.residences,n=R.length,visited=R.filter(isVisited).length,conforme=R.filter(r=>statusOf(r)==='Conforme').length,absent=R.filter(r=>statusOf(r).startsWith('Absent')).length,nonconf=R.filter(r=>statusOf(r).startsWith('Non conforme')).length,appointments=data.appointments.filter(a=>!['Annulé','Réalisé'].includes(a.status)).length;return{n,visited,remaining:n-visited,pct:n?Math.round(visited/n*100):0,conforme,absent,nonconf,appointments}}
+function renderDashboard(){const m=metrics();$('kpiGrid').innerHTML=[['Résidences',m.n],['Visitées',m.visited],['Restantes',m.remaining],['Avancement',m.pct+' %'],['Non conformes',m.nonconf],['Rendez-vous',m.appointments]].map(x=>`<div class="kpi"><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join('');const groups={};data.residences.forEach(r=>{const c=circuitName(r)||'Sans circuit';groups[c]??={n:0,v:0};groups[c].n++;if(isVisited(r))groups[c].v++});$('circuitProgress').innerHTML=Object.entries(groups).map(([c,x])=>`<div style="margin-bottom:13px"><b>${esc(c)}</b><span style="float:right">${x.v}/${x.n}</span><div class="progress"><div style="width:${x.n?x.v/x.n*100:0}%"></div></div></div>`).join('')||'<div class="empty">Aucun circuit.</div>';$('priorities').innerHTML=data.residences.filter(r=>FOLLOW.has(statusOf(r))).slice(0,8).map(residenceMini).join('')||'<div class="empty">Aucune priorité.</div>';$('upcomingAppointments').innerHTML=upcoming().slice(0,6).map(apptMini).join('')||'<div class="empty">Aucun rendez-vous.</div>';renderVisitChart()}
+function residenceMini(r){return `<div class="item" style="border-left-color:${STATUS[statusOf(r)]}"><div class="item-title">${esc(r.address)}</div><div class="item-meta">${esc(statusOf(r))} · ${esc(circuitName(r))}</div></div>`}
+function apptMini(a){const r=data.residences.find(x=>x.id===a.residenceId);return `<div class="item" style="border-left-color:${STATUS['Rendez-vous planifié']}"><div class="item-title">${esc(r?.address||a.address)}</div><div class="item-meta">${fmtDateTime(a.start)} · ${esc(a.status||'Planifié')}</div></div>`}
+function filters(){return{q:$('searchFilter')?.value.toLowerCase()||'',m:$('municipalityFilter')?.value||'',c:$('circuitFilter')?.value||'',a:$('agentFilter')?.value||'',s:$('statusFilter')?.value||'',p:$('parityFilter')?.value||''}}
+function filtered(){const f=filters();return data.residences.filter(r=>{const num=parseInt(String(r.civicNumber||r.address||'').match(/\d+/)?.[0]);return(!f.q||(`${r.address} ${r.preventionNumber}`).toLowerCase().includes(f.q))&&(!f.m||r.municipality===f.m)&&(!f.c||circuitName(r)===f.c)&&(!f.a||residenceAgent(r)===f.a)&&(!f.s||statusOf(r)===f.s)&&(!f.p||(f.p==='pair'?num%2===0:num%2===1))})}
+function initMap(){if(map)return;map=L.map('mainMap').setView([48.85,-67.53],9);const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}),topo=L.tileLayer('https://tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'© OpenTopoMap'}),sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri'});osm.addTo(map);L.control.layers({'Standard':osm,'Topographique':topo,'Satellite':sat}).addTo(map);markers=L.markerClusterGroup({showCoverageOnHover:false});map.addLayer(markers)}
+function icon(color){return L.divIcon({className:'',html:`<div style="width:22px;height:22px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 2px 8px #0008"></div>`,iconSize:[22,22],iconAnchor:[11,11]})}
+function renderMap(){if(!map)return;markers.clearLayers();bounds=[];filtered().forEach(r=>{const lat=+r.latitude,lon=+r.longitude;if(!Number.isFinite(lat)||!Number.isFinite(lon))return;const m=L.marker([lat,lon],{icon:icon(STATUS[statusOf(r)]||'#777')});m.bindPopup(`<b>${esc(r.address)}</b><br>${esc(r.preventionNumber||'')}<br><span class="status" style="background:${STATUS[statusOf(r)]}">${esc(statusOf(r))}</span><br><br><button class="btn small" onclick="openResidence('${r.id}')">Ouvrir la fiche</button>`);markers.addLayer(m);bounds.push([lat,lon])});renderMapList()}
+function renderMapList(){$('residenceList').innerHTML=filtered().map(r=>`<div class="item" style="border-left-color:${STATUS[statusOf(r)]}" onclick="selectResidence('${r.id}')"><div class="item-title">${esc(r.address)}</div><div class="item-meta">${esc(r.preventionNumber||'')} · ${esc(statusOf(r))}</div><div class="item-meta">${esc(circuitName(r))} · ${esc(residenceAgent(r))}</div></div>`).join('')||'<div class="empty">Aucune résidence.</div>';if(map)renderMap()}
+function fitMarkers(){if(map&&bounds.length)map.fitBounds(bounds,{padding:[30,30]})}function selectResidence(id){const r=data.residences.find(x=>String(x.id)===String(id));if(r&&map&&r.latitude&&r.longitude){map.flyTo([+r.latitude,+r.longitude],17)}openResidence(id)}
+function openResidence(id){const r=data.residences.find(x=>String(x.id)===String(id))||{id:'',status:'Non visitée'};selectedResidence=r;$('residenceForm').innerHTML=`<div class="form-grid"><div class="field full"><label>Adresse</label><input id="rAddress" value="${esc(r.address||'')}"></div><div class="field"><label>No prévention</label><input id="rPrevention" value="${esc(r.preventionNumber||'')}"></div><div class="field"><label>Municipalité</label><input id="rMunicipality" value="${esc(r.municipality||'')}"></div><div class="field"><label>Circuit</label><select id="rCircuit">${options(data.circuits.map(x=>x.name),'Choisir')}</select></div><div class="field"><label>Agent</label><select id="rAgent">${options(data.users.map(x=>x.name),'Choisir')}</select></div><div class="field"><label>Statut</label><select id="rStatus">${Object.keys(STATUS).map(s=>`<option ${s===statusOf(r)?'selected':''}>${esc(s)}</option>`).join('')}</select></div><div class="field"><label>Date de suivi</label><input id="rFollow" type="date" value="${esc((r.followUpDate||'').slice(0,10))}"></div><div class="field full"><label>Note opérationnelle non nominative</label><textarea id="rNote">${esc(r.note||'')}</textarea></div><div class="field"><label>Latitude</label><input id="rLat" value="${esc(r.latitude||'')}"></div><div class="field"><label>Longitude</label><input id="rLon" value="${esc(r.longitude||'')}"></div><div class="quick-status full">${['Conforme','Absent, 1re tentative','Non conforme, 1er avis','Refus','Incapacité','Rendez-vous planifié','Suivi requis','Dossier fermé'].map(s=>`<button type="button" onclick="$('rStatus').value='${s}'" style="border-left:6px solid ${STATUS[s]}">${s}</button>`).join('')}</div><div class="actions full"><button class="btn" onclick="saveResidence()">Enregistrer</button><button class="btn secondary" onclick="openAppointment('${r.id}')">Planifier un rendez-vous</button><button class="btn light" onclick="navigateTo('${esc(r.address||'')}')">Navigation</button></div></div>`;$('rCircuit').value=circuitName(r);$('rAgent').value=residenceAgent(r);$('residenceModal').classList.add('open')}
+async function saveResidence(){const r=selectedResidence||{},payload={address:$('rAddress').value,preventionNumber:$('rPrevention').value,municipality:$('rMunicipality').value,circuit:$('rCircuit').value,agent:$('rAgent').value,status:$('rStatus').value,followUpDate:$('rFollow').value,note:$('rNote').value,latitude:$('rLat').value,longitude:$('rLon').value,updatedAt:new Date().toISOString()};Object.assign(r,payload);if(!r.id){r.id=crypto.randomUUID();data.residences.push(r)}localStorage.setItem('pvaf_cache',JSON.stringify(data));closeModal('residenceModal');renderAll();try{await api('/residences/'+r.id,{method:r._new?'POST':'PATCH',body:JSON.stringify(payload)})}catch(e){alert('Enregistré localement; synchronisation en attente.')}}
+function closeModal(id){$(id).classList.remove('open')}function navigateTo(address){window.open('https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(address),'_blank')}
+function buildRoute(){let R=data.residences.filter(r=>(!$('routeCircuit').value||circuitName(r)===$('routeCircuit').value)&&(!$('routeAgent').value||residenceAgent(r)===$('routeAgent').value));if($('routeInclude').value==='remaining')R=R.filter(r=>!isVisited(r)||FOLLOW.has(statusOf(r)));if($('routeInclude').value==='absent')R=R.filter(r=>statusOf(r).startsWith('Absent'));const num=r=>parseInt(String(r.civicNumber||r.address||'').match(/\d+/)?.[0])||0,ord=$('routeOrder').value;if(ord==='asc')R.sort((a,b)=>num(a)-num(b));if(ord==='desc')R.sort((a,b)=>num(b)-num(a));if(ord==='pair'||ord==='impair')R.sort((a,b)=>{const first=ord==='pair'?0:1;return((num(a)%2===first?0:1)-(num(b)%2===first?0:1))||num(a)-num(b)});if(ord==='nearest')R=nearestRoute(R);route=R;routeIndex=0;localStorage.setItem('pvaf_route',JSON.stringify({ids:R.map(x=>x.id),routeIndex}));renderRoute()}
+function nearestRoute(arr){if(!arr.length)return[];const left=[...arr],out=[left.shift()];while(left.length){const p=out[out.length-1],dist=r=>Math.hypot((+r.latitude||0)-(+p.latitude||0),(+r.longitude||0)-(+p.longitude||0));left.sort((a,b)=>dist(a)-dist(b));out.push(left.shift())}return out}function resumeRoute(){const s=JSON.parse(localStorage.getItem('pvaf_route')||'null');if(s){route=s.ids.map(id=>data.residences.find(r=>r.id===id)).filter(Boolean);routeIndex=s.routeIndex||0;renderRoute()}}
+function renderRoute(){const r=route[routeIndex];$('currentStop').innerHTML=r?`<div class="item"><div class="item-title">${esc(r.address)}</div><div class="item-meta">${esc(statusOf(r))} · Étape ${routeIndex+1}/${route.length}</div><div class="actions" style="margin-top:10px"><button class="btn" onclick="openResidence('${r.id}')">Mettre à jour</button><button class="btn secondary" onclick="navigateTo('${esc(r.address)}')">Navigation</button><button class="btn light" onclick="nextStop()">Adresse suivante</button></div></div>`:'<div class="empty">Aucun circuit généré.</div>';$('routeProgress').innerHTML=`<b>${routeIndex}/${route.length} étapes terminées</b><div class="progress" style="margin-top:8px"><div style="width:${route.length?routeIndex/route.length*100:0}%"></div></div>`;$('routeList').innerHTML=route.map((x,i)=>`<div class="item ${i===routeIndex?'selected':''}" style="border-left-color:${STATUS[statusOf(x)]}" onclick="routeIndex=${i};renderRoute()"><b>${i+1}. ${esc(x.address)}</b> <span class="item-meta">${esc(statusOf(x))}</span></div>`).join('')||'<div class="empty">Aucune étape.</div>'}
+function nextStop(){routeIndex=Math.min(routeIndex+1,route.length);localStorage.setItem('pvaf_route',JSON.stringify({ids:route.map(x=>x.id),routeIndex}));renderRoute()}
+function upcoming(){return data.appointments.filter(a=>new Date(a.start)>=new Date()&&!['Annulé'].includes(a.status)).sort((a,b)=>new Date(a.start)-new Date(b.start))}
+function openAppointment(residenceId,appointmentId){const a=data.appointments.find(x=>x.id===appointmentId)||{};$('appointmentId').value=a.id||'';$('appointmentResidence').value=residenceId||a.residenceId||'';const d=a.start?new Date(a.start):new Date(Date.now()+86400000);$('appointmentDate').value=d.toISOString().slice(0,10);$('appointmentTime').value=d.toTimeString().slice(0,5);$('appointmentDuration').value=a.duration||config().defaultDuration||30;$('appointmentAgent').value=a.agent||currentUser?.name||'';$('appointmentStatus').value=a.status||'Planifié';$('appointmentNote').value=a.note||'';$('appointmentOutlook').checked=true;$('appointmentModal').classList.add('open')}
+$('appointmentForm').addEventListener('submit',async e=>{e.preventDefault();const id=$('appointmentId').value||crypto.randomUUID(),rid=$('appointmentResidence').value,r=data.residences.find(x=>String(x.id)===String(rid)),start=new Date($('appointmentDate').value+'T'+$('appointmentTime').value),duration=+$('appointmentDuration').value,end=new Date(start.getTime()+duration*60000);let a=data.appointments.find(x=>x.id===id);const payload={id,residenceId:rid,address:r?.address,start:start.toISOString(),end:end.toISOString(),duration,agent:$('appointmentAgent').value,status:$('appointmentStatus').value,note:$('appointmentNote').value,updatedAt:new Date().toISOString(),outlookEventId:a?.outlookEventId||null};if(a)Object.assign(a,payload);else{a=payload;data.appointments.push(a)}if(r){r.status='Rendez-vous planifié';r.followUpDate=start.toISOString()}localStorage.setItem('pvaf_cache',JSON.stringify(data));closeModal('appointmentModal');renderAll();try{await api('/appointments/'+id,{method:a._existing?'PATCH':'PUT',body:JSON.stringify(payload)})}catch(err){}if($('appointmentOutlook').checked){try{const event=await syncOutlookEvent(a);a.outlookEventId=event.id;a.outlookSyncStatus='synchronisé';await api('/appointments/'+id,{method:'PATCH',body:JSON.stringify({outlookEventId:event.id,outlookSyncStatus:'synchronisé'})}).catch(()=>{})}catch(err){a.outlookSyncStatus='erreur';alert('Rendez-vous enregistré, mais Outlook n’a pas été synchronisé : '+err.message)}}renderAppointments()});
+function renderAppointments(){$('appointmentList').innerHTML=data.appointments.slice().sort((a,b)=>new Date(a.start)-new Date(b.start)).map(a=>`<div class="item" style="border-left-color:${STATUS['Rendez-vous planifié']}"><div class="item-title">${esc(a.address||data.residences.find(r=>r.id===a.residenceId)?.address)}</div><div class="item-meta">${fmtDateTime(a.start)} · ${esc(a.agent)} · ${esc(a.status)}</div><div class="actions" style="margin-top:8px"><button class="btn small" onclick="openAppointment('', '${a.id}')">Modifier</button><button class="btn light small" onclick="downloadICS('${a.id}')">Outlook .ics</button><span class="badge">${esc(a.outlookSyncStatus||'non synchronisé')}</span></div></div>`).join('')||'<div class="empty">Aucun rendez-vous.</div>';renderCalendar()}
+function renderCalendar(){const first=new Date(calendarDate.getFullYear(),calendarDate.getMonth(),1),last=new Date(calendarDate.getFullYear(),calendarDate.getMonth()+1,0);$('calendarMonth').textContent=first.toLocaleDateString('fr-CA',{month:'long',year:'numeric'});let html='';for(let i=0;i<first.getDay();i++)html+='<div></div>';for(let d=1;d<=last.getDate();d++){const key=new Date(first.getFullYear(),first.getMonth(),d).toISOString().slice(0,10),A=data.appointments.filter(a=>a.start?.slice(0,10)===key);html+=`<div class="day"><b>${d}</b>${A.map(a=>`<div class="appt" onclick="openAppointment('', '${a.id}')">${a.start.slice(11,16)} ${esc((a.address||'').split(',')[0])}</div>`).join('')}</div>`}$('calendar').innerHTML=html}function changeMonth(n){calendarDate=new Date(calendarDate.getFullYear(),calendarDate.getMonth()+n,1);renderCalendar()}
+function renderFollowups(){const s=$('followStatus')?.value||'',agent=$('followAgent')?.value||'',due=$('followDue')?.value||'',now=new Date();let R=data.residences.filter(r=>FOLLOW.has(statusOf(r))&&(!s||statusOf(r)===s)&&(!agent||residenceAgent(r)===agent));if(due)R=R.filter(r=>{const d=new Date(r.followUpDate);if(isNaN(d))return false;const days=(d-now)/86400000;return due==='late'?days<0:days>=0&&days<=+due});$('followTable').innerHTML=R.map(r=>`<tr><td>${esc(r.address)}</td><td><span class="status" style="background:${STATUS[statusOf(r)]}">${esc(statusOf(r))}</span></td><td>${esc(residenceAgent(r))}</td><td>${fmtDate(r.followUpDate)}</td><td>${esc(r.note||'')}</td><td><button class="btn small" onclick="openResidence('${r.id}')">Ouvrir</button></td></tr>`).join('')||'<tr><td colspan="6">Aucun suivi.</td></tr>'}
+function renderCorrections(){const R=data.residences.filter(r=>!r.latitude||!r.longitude||r.geocodeStatus==='failed'||r.duplicateOf);$('correctionList').innerHTML=R.map(r=>`<div class="item" style="border-left-color:${STATUS['Adresse inexistante']}"><div class="item-title">${esc(r.address||'Adresse manquante')}</div><div class="item-meta">${!r.latitude||!r.longitude?'Coordonnées manquantes':''} ${r.geocodeStatus==='failed'?'· Géocodage échoué':''} ${r.duplicateOf?'· Doublon potentiel':''}</div><div class="actions" style="margin-top:8px"><button class="btn small" onclick="openResidence('${r.id}')">Corriger</button><button class="btn secondary small" onclick="geocodeResidence('${r.id}')">Relancer le géocodage</button></div></div>`).join('')||'<div class="empty">Aucune adresse à corriger.</div>'}
+async function geocodeResidence(id){const r=data.residences.find(x=>x.id===id);try{const res=await api('/geocode',{method:'POST',body:JSON.stringify({address:r.address})});Object.assign(r,{latitude:res.latitude,longitude:res.longitude,geocodeStatus:'ok'});await api('/residences/'+id,{method:'PATCH',body:JSON.stringify(r)});renderAll()}catch(e){alert('Géocodage impossible : '+e.message)}}
+function renderStatistics(){const m=metrics();$('statKpis').innerHTML=[['Avancement',m.pct+' %'],['Conformes',m.conforme],['Non conformes',m.nonconf],['Absents',m.absent],['Rendez-vous',m.appointments],['Restantes',m.remaining]].map(x=>`<div class="kpi"><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join('');const statusCounts=countBy(data.residences,statusOf),agentCounts=countBy(data.residences,residenceAgent),munCounts={};data.residences.forEach(r=>{const m=r.municipality||'Non précisée';munCounts[m]??={n:0,v:0};munCounts[m].n++;if(isVisited(r))munCounts[m].v++});makeChart('statusChart','doughnut',Object.keys(statusCounts),Object.values(statusCounts),Object.keys(statusCounts).map(s=>STATUS[s]));makeChart('agentChart','bar',Object.keys(agentCounts),Object.values(agentCounts),'#7a0000');makeChart('municipalityChart','bar',Object.keys(munCounts),Object.values(munCounts).map(x=>x.n?Math.round(x.v/x.n*100):0),'#218739');makeChart('weeklyChart','line',lastWeeks(),weeklyCounts(),'#c30012')}
+function countBy(arr,fn){return arr.reduce((o,x)=>(o[fn(x)||'Non précisé']=(o[fn(x)||'Non précisé']||0)+1,o),{})}function makeChart(id,type,labels,vals,color){charts[id]?.destroy();charts[id]=new Chart($(id),{type,data:{labels,datasets:[{data:vals,backgroundColor:color,borderColor:color,borderWidth:2,tension:.25}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:type==='doughnut'}}}})}
+function renderVisitChart(){const labels=[...Array(14)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-13+i);return d.toISOString().slice(0,10)}),counts=labels.map(k=>data.visits.filter(v=>(v.date||v.createdAt||'').slice(0,10)===k).length);makeChart('visitsChart','bar',labels.map(fmtDate),counts,'#7a0000')}function lastWeeks(){return[...Array(8)].map((_,i)=>'S-'+(7-i))}function weeklyCounts(){return[...Array(8)].map((_,i)=>data.visits.filter(v=>{const days=(Date.now()-new Date(v.date||v.createdAt))/86400000;return days>=((7-i)-1)*7&&days<(8-i)*7}).length)}
+function renderAdmin(){$('userAdmin').innerHTML=data.users.map(u=>`<div class="item"><b>${esc(u.name)}</b><span class="badge" style="float:right">${esc(u.role||'agent')}</span></div>`).join('')||'<div class="empty">Aucun utilisateur.</div>';$('circuitAdmin').innerHTML=data.circuits.map(c=>`<div class="item"><b>${esc(c.name)}</b><div class="item-meta">${esc(c.municipality||'')} · ${data.residences.filter(r=>r.circuitId===c.id||r.circuit===c.name).length} adresses</div></div>`).join('')||'<div class="empty">Aucun circuit.</div>'}
+async function testApi(){try{const x=await api('/health');alert('API fonctionnelle : '+JSON.stringify(x))}catch(e){alert('Échec : '+e.message)}}
+function initMsal(){const c=config();if(!c.clientId||!c.tenantId||!window.msal)return;msalApp=new msal.PublicClientApplication({auth:{clientId:c.clientId,authority:`https://login.microsoftonline.com/${c.tenantId}`,redirectUri:c.redirectUri||location.href.split('#')[0]},cache:{cacheLocation:'localStorage'}});const accounts=msalApp.getAllAccounts();if(accounts.length){graphAccount=accounts[0];$('outlookBtn').textContent='Outlook connecté';$('outlookBtn').classList.add('ok')}}
+async function connectOutlook(){initMsal();if(!msalApp){alert('Configure Tenant ID et Client ID dans Administration.');showPage('admin');return}const res=await msalApp.loginPopup({scopes:['User.Read','Calendars.ReadWrite']});graphAccount=res.account;$('outlookBtn').textContent='Outlook connecté';$('outlookBtn').classList.add('ok');$('outlookNotice').textContent='Outlook est connecté. Les nouveaux rendez-vous seront synchronisés automatiquement.';$('outlookNotice').className='notice'}
+async function graphToken(){if(!msalApp||!graphAccount)throw new Error('Outlook non connecté');try{return(await msalApp.acquireTokenSilent({account:graphAccount,scopes:['Calendars.ReadWrite']})).accessToken}catch(e){return(await msalApp.acquireTokenPopup({account:graphAccount,scopes:['Calendars.ReadWrite']})).accessToken}}
+async function syncOutlookEvent(a){const token=await graphToken(),r=data.residences.find(x=>x.id===a.residenceId),payload={subject:'Visite de prévention résidentielle',body:{contentType:'HTML',content:`<b>Numéro de prévention :</b> ${esc(r?.preventionNumber||'')}<br><b>Circuit :</b> ${esc(circuitName(r||{}))}<br><b>Statut :</b> Rendez-vous planifié<br><b>Note :</b> ${esc(a.note||'')}`},start:{dateTime:localGraphDate(a.start),timeZone:'Eastern Standard Time'},end:{dateTime:localGraphDate(a.end),timeZone:'Eastern Standard Time'},location:{displayName:r?.address||a.address},isReminderOn:true,reminderMinutesBeforeStart:+(config().reminderMinutes||30),transactionId:a.id};const url=a.outlookEventId?`https://graph.microsoft.com/v1.0/me/events/${a.outlookEventId}`:'https://graph.microsoft.com/v1.0/me/calendar/events',method=a.outlookEventId?'PATCH':'POST',res=await fetch(url,{method,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!res.ok)throw new Error('Microsoft Graph '+res.status);return method==='PATCH'?{id:a.outlookEventId}:res.json()}
+function localGraphDate(iso){const d=new Date(iso),pad=n=>String(n).padStart(2,'0');return`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`}
+function downloadICS(id){const a=data.appointments.find(x=>x.id===id),r=data.residences.find(x=>x.id===a.residenceId),dt=s=>new Date(s).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');const ics=`BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:${a.id}@pvaf-matanie\r\nDTSTAMP:${dt(new Date())}\r\nDTSTART:${dt(a.start)}\r\nDTEND:${dt(a.end)}\r\nSUMMARY:Visite de prévention résidentielle\r\nLOCATION:${(r?.address||a.address||'').replace(/,/g,'\\,')}\r\nDESCRIPTION:Numéro de prévention: ${r?.preventionNumber||''}\r\nEND:VEVENT\r\nEND:VCALENDAR`;download('rendez-vous.ics',ics,'text/calendar')}
+function exportCSV(){const rows=[['No prévention','Adresse','Municipalité','Circuit','Agent','Statut','Suivi'],...filtered().map(r=>[r.preventionNumber,r.address,r.municipality,circuitName(r),residenceAgent(r),statusOf(r),r.followUpDate])];download('circuits-prevention.csv',rows.map(x=>x.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(';')).join('\n'),'text/csv;charset=utf-8')}
+function downloadBackup(){download('sauvegarde-pvaf.json',JSON.stringify(data,null,2),'application/json')}function download(name,content,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();URL.revokeObjectURL(a.href)}function clearLocalCache(){if(confirm('Vider les données locales?')){localStorage.removeItem('pvaf_cache');localStorage.removeItem('pvaf_queue');location.reload()}}
+function fmtDate(v){if(!v)return'--';const d=new Date(v);return isNaN(d)?v:d.toLocaleDateString('fr-CA')}function fmtDateTime(v){if(!v)return'--';const d=new Date(v);return isNaN(d)?v:d.toLocaleString('fr-CA',{dateStyle:'medium',timeStyle:'short'})}
+$('nav').addEventListener('click',e=>{const b=e.target.closest('button[data-page]');if(b)showPage(b.dataset.page)});['searchFilter','municipalityFilter','circuitFilter','agentFilter','statusFilter','parityFilter'].forEach(id=>$(id).addEventListener(id==='searchFilter'?'input':'change',()=>{renderMapList()}));['followStatus','followDue','followAgent'].forEach(id=>$(id).addEventListener('change',renderFollowups));$('syncBtn').onclick=()=>loadAll(true);$('outlookBtn').onclick=connectOutlook;window.addEventListener('online',()=>{updateNetwork();flushQueue()});window.addEventListener('offline',updateNetwork);
+function boot(){loadConfig();updateNetwork();initMsal();renderSelectors();renderAll();if(config().apiUrl)loadAll();else{showPage('admin');showApiError('Configure l’API Cloudflare pour charger les données.')}}boot();
 </script>
-</body>
-</html>
+</body></html>
